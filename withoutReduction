@@ -1,0 +1,33 @@
+const N=7 range R=1..N
+const M=2
+range SafeCapacity=0..M
+range PlaneNum=1..M
+set ControllableAction = {p[R].c[R].in,p[R].c[R].out,c[R].gtoPT,c[R].pttoG,c[R].inG,c[R].outG}
+
+PLANE= OUT,
+OUT =(inG-> GATE),
+GATE = (gtoPT->PATH|outG->OUT),
+PATH=(p[r:R].in->PARK[r]|pttoG->GATE),
+PARK[r:R]=(request->p[r].out->PATH).
+
+GATE=EMPTY,
+EMPTY=({c[R].inG,c[R].pttoG}->FULL),
+FULL=({c[R].outG,c[R].gtoPT} -> EMPTY).
+
+PATH=EMPTY,
+EMPTY=CAPA[0],
+CAPA[c:SafeCapacity]=(
+when(c<M){p[R].c[R].out,c[R].gtoPT}->CAPA[c+1]|
+when(c>=M){p[R].c[R].out,c[R].gtoPT}->ERROR|
+when(c>0){p[R].c[R].in,c[R].pttoG}->CAPA[c-1]).
+
+PARK=EMPTY,
+EMPTY=(c[R].in->FULL),
+FULL=(c[R].out->EMPTY).
+
+||ENV=(c[R]:PLANE||p[R]:PARK||GATE||PATH)/{p[r1:R].c[r2:R].in/c[r2].p[r1].in,p[r1:R].c[r2:R].out/c[r2].p[r1].out}.
+
+ltl_property NotReturnPK1=[](p[R].c[1].out->X(!p[R].c[1].in W c[1].pttoG))
+ltl_property NotReturnTheGate1=[](c[1].inG->X(!c[1].outG W c[1].gtoPT))
+ltl_property NotReturnPT1=[](c[1].gtoPT->X(!c[1].pttoG W (p[R].c[1].in)))
+ltl_property NotReturnG1=[](c[1].pttoG->X(!c[1].gtoPT W (c[1].outG)))
